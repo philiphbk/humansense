@@ -1,0 +1,88 @@
+{
+  "generated": "2026-11-07 14:44:25",
+  "environment": {
+    "python": "3.10.0",
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "numpy": "2.2.6",
+    "opencv": "4.13.0",
+    "humansense": "2.0.0",
+    "cpu": "Apple M4 Pro",
+    "mediapipe": "0.10.33",
+    "ultralytics": "8.4.41",
+    "onnxruntime": "1.23.2"
+  },
+  "benchmark": "COCO val2017 keypoints (GT boxes, MediaPipe lite)",
+  "persons_evaluated": 5291,
+  "pose_found_rate": 0.7397467397467398,
+  "min_keypoints": 5,
+  "min_box_height_px": 64,
+  "oks": {
+    "AP": 0.25728108766974284,
+    "AP50": 0.48116524844069714,
+    "AP75": 0.23862021668818564,
+    "AP_medium": 0.2138767226964987,
+    "AP_large": 0.31555955542257874,
+    "AR": 0.3225014169658039,
+    "AR50": 0.5463820139807293,
+    "AR75": 0.3202342716795768,
+    "AR_medium": 0.26950329975686,
+    "AR_large": 0.38670256835128425
+  },
+  "cue_fidelity": {
+    "raised_hand": {
+      "reference_positives": 386,
+      "precision": 0.5858310626702997,
+      "recall": 0.5569948186528497,
+      "f1": 0.5710491367861886,
+      "tp": 215,
+      "fp": 152,
+      "fn": 171
+    },
+    "seated": {
+      "reference_positives": 428,
+      "precision": 0.30235783633841884,
+      "recall": 0.5093457943925234,
+      "f1": 0.37946040034812883,
+      "tp": 218,
+      "fp": 503,
+      "fn": 210
+    },
+    "arms_crossed": {
+      "reference_positives": 65,
+      "precision": 0.4,
+      "recall": 0.06153846153846154,
+      "f1": 0.10666666666666667,
+      "tp": 4,
+      "fp": 6,
+      "fn": 61
+    },
+    "protective_posture": {
+      "reference_positives": 613,
+      "precision": 0.125,
+      "recall": 0.004893964110929853,
+      "f1": 0.009419152276295133,
+      "tp": 3,
+      "fp": 21,
+      "fn": 610
+    },
+    "fall": {
+      "reference_positives": 52,
+      "precision": 0.3026315789473684,
+      "recall": 0.4423076923076923,
+      "f1": 0.359375,
+      "tp": 23,
+      "fp": 53,
+      "fn": 29
+    },
+    "fall_risk": {
+      "reference_positives": 169,
+      "precision": 0.46534653465346537,
+      "recall": 0.2781065088757396,
+      "f1": 0.34814814814814815,
+      "tp": 47,
+      "fp": 54,
+      "fn": 122
+    }
+  }
+}
