@@ -9,6 +9,8 @@ Detects:
 """
 
 import math
+from collections import deque
+
 import cv2
 import numpy as np
 import mediapipe as mp
@@ -51,10 +53,25 @@ _landmarker = None
 # A cue must persist for 2 processed frames and clear for 3 to stop one-frame flicker.
 _debouncer = Debouncer(on_frames=2, off_frames=3)
 
+# ── Fall dynamics ────────────────────────────────────────────────────────────
+# A real fall is a collapse *event* (the torso rotates into horizontal fast); a person already
+# resting on a bed/couch/floor is a static *state* (they got there, however they got there, and are
+# no longer rotating). Tracks each person's torso-tilt angle frame to frame (keyed by `pid`, which
+# includes id 0 of the no-detection fallback below -- that path fires repeatedly for the same still
+# scene when it fires at all, so its dynamics state is a meaningful signal too) and requires a
+# recent fast rotation to confirm "FALL detected". bbox-centroid speed (from utils.tracking) was
+# tried first and discarded -- it did not separate the two cases on the URFD odd-numbered
+# sequences (see paper/REPORT.md). Tuned on the odd-numbered sequences only; do not retune against
+# the even ones.
+FALL_COLLAPSE_WINDOW = 5        # processed frames of "recent" tilt-rate history
+FALL_COLLAPSE_RATE = 25.0       # degrees/processed-frame
+_fall_dynamics = {}             # pid -> {"streak": int, "rates": deque, "prev_tilt": float|None}
+
 
 def reset_state():
     """Call when a new video / camera session starts."""
     _debouncer.reset()
+    _fall_dynamics.clear()
 
 
 def get_landmarker():
@@ -98,6 +115,10 @@ def analyze_pose(frame: np.ndarray, detections=None, calibration=None, draw: boo
     if detections:
         people = [(d.get("id", i), d["bbox"]) for i, d in enumerate(detections)]
     else:
+        # No person detection this frame (e.g. the person-detector missed an unusual, often
+        # horizontal, posture) -- analyse the whole frame as id 0. This happens repeatedly, frame
+        # after frame, for exactly the same still scene when it happens at all, so id 0's fall
+        # dynamics state across those calls is a meaningful signal, not a collision.
         people = [(0, (0, 0, w, h))]
     multi = len(people) > 1
 
@@ -124,7 +145,7 @@ def analyze_pose(frame: np.ndarray, detections=None, calibration=None, draw: boo
         skeletons.append(pts)
         in_bed_zone = (calibration is not None and
                        calibration.in_no_fall_zone(((x1 + x2) / 2, y2), w, h))
-        for cue, fn in _person_cues(pts, (x1, y1, x2, y2)):
+        for cue, fn in _person_cues(pts, (x1, y1, x2, y2), pid):
             # Beds / gurney bays: lying down there is expected, not a fall
             if in_bed_zone and cue.upper().startswith("FALL"):
                 continue
@@ -166,10 +187,19 @@ def _pose_summary(pts):
     }
 
 
-def _person_cues(pts, bbox):
+def _person_cues(pts, bbox, pid=0):
     """
     Rule-based cues for one person. All thresholds are relative to that person's own
     torso length, so they do not change with resolution or distance from the camera.
+
+    The rate at which this person's (`pid`) torso tilt angle changes, frame to frame, is used to
+    tell a fall *event* (the torso rotating into horizontal fast) from someone already resting in
+    a horizontal posture (no recent rotation, e.g. lying on a bed/couch -- the hard negatives in
+    the URFD ADL set): a posture that only just became horizontal needs a recent fast rotation to
+    confirm "FALL detected"; once it has been horizontal for a while with no such rotation, it is
+    downgraded to the weaker "fall risk" cue instead. The very first time a `pid` is seen (no prior
+    tilt to compare against) defaults to confirming the fall rather than the weaker cue: with no
+    history to say otherwise, a hospital safety cue should fail toward alerting, not toward silence.
     Returns a list of (cue_text, draw_fn(frame)).
     """
     def xy(i): return (pts[i][0], pts[i][1])
@@ -202,18 +232,47 @@ def _person_cues(pts, bbox):
     # Facing the camera? Turned sideways, shoulders overlap in x and differ a lot in depth.
     frontal = not (shoulders_ok and abs(pts[_L_SHOULDER][3] - pts[_R_SHOULDER][3]) > sh_width)
 
-    # ── Fall detection (body orientation, independent of distance/frame size) ────
+    # ── Fall detection (body orientation + motion dynamics, independent of distance/frame size) ──
+    horizontal_now, leaning = False, False
     if tilt is not None and torso_len > 10:
         wide_box = box_w > 1.2 * box_h
-        if tilt > 65 or (tilt > 50 and wide_box):
+        horizontal_now = tilt > 65 or (tilt > 50 and wide_box)
+        leaning = tilt > 40 and not horizontal_now
+    elif wide_box_only(box_w, box_h):
+        horizontal_now = True   # torso not visible (e.g. lying person seen end-on): go by box shape
+
+    state = _fall_dynamics.setdefault(
+        pid, {"streak": 0, "rates": deque(maxlen=FALL_COLLAPSE_WINDOW), "prev_tilt": None})
+    rate = None
+    if tilt is not None:
+        if state["prev_tilt"] is not None:
+            rate = abs(tilt - state["prev_tilt"])
+        state["prev_tilt"] = tilt
+    if horizontal_now:
+        state["streak"] += 1
+        if rate is not None:
+            state["rates"].append(rate)
+    else:
+        state["streak"] = 0
+        state["rates"].clear()
+
+    if horizontal_now:
+        # A fall is a collapse *event* (a recent fast rotation into horizontal); lying with no
+        # such rotation -- e.g. someone already resting on a bed/couch -- stays at the weaker
+        # "fall risk" cue. No tilt signal at all (torso not visible): skip the gating and keep the
+        # plain posture rule. No rate history yet (pid's first observed frame): default to
+        # confirming the fall (fail toward alerting, not toward silence).
+        collapsed = (tilt is None
+                     or (state["streak"] <= FALL_COLLAPSE_WINDOW
+                         and max(state["rates"], default=float("inf")) >= FALL_COLLAPSE_RATE))
+        if collapsed:
             cues.append(("FALL detected (horizontal posture)",
                          lambda f: _draw_alert_box(f, "FALL DETECTED", (0, 0, 220))))
-        elif tilt > 40:
-            cues.append(("Fall risk (leaning severely)",
+        else:
+            cues.append(("Fall risk (lying posture, no collapse motion observed)",
                          lambda f: _draw_alert_box(f, "FALL RISK", (0, 100, 255))))
-    elif wide_box_only(box_w, box_h):
-        # Torso not visible (e.g. lying person seen end-on): fall back to the box shape
-        cues.append(("Fall risk (lying posture)",
+    elif leaning:
+        cues.append(("Fall risk (leaning severely)",
                      lambda f: _draw_alert_box(f, "FALL RISK", (0, 100, 255))))
 
     upright = tilt is None or tilt < 30

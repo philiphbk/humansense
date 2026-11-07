@@ -56,6 +56,9 @@ def run(args):
     if args.limit:
         seqs = ([s for s in seqs if s.startswith("fall")][: args.limit]
                 + [s for s in seqs if s.startswith("adl")][: args.limit])
+    if args.parity:
+        want = 1 if args.parity == "odd" else 0
+        seqs = [s for s in seqs if int(s.split("-")[1]) % 2 == want]
     rows, t0 = [], time.time()
     for si, seq in enumerate(seqs):
         pipe.reset()
@@ -146,13 +149,18 @@ if __name__ == "__main__":
     ap.add_argument("--conf", type=float, default=0.4)
     ap.add_argument("--limit", type=int, default=0, help="debug: only N fall + N ADL sequences")
     ap.add_argument("--reuse", action="store_true", help="recompute metrics from the cached frames")
+    ap.add_argument("--parity", choices=["odd", "even"],
+                    help="only sequences numbered odd/even (e.g. fall-01, fall-03, ... for 'odd'): "
+                         "tune thresholds on one half, report only on the other, never both on the "
+                         "same half")
     a = ap.parse_args()
     cache = CACHE / f"urfd_{a.backend}.jsonl"
     rows = ([json.loads(l) for l in cache.read_text().splitlines()] if a.reuse and cache.exists()
             else run(a))
     res = analyze(rows)
-    save(f"falls_{a.backend}" + ("_debug" if a.limit else ""),
-         {"benchmark": "URFD cam0 RGB fall detection", "backend": a.backend, "conf": a.conf, **res})
+    name = f"falls_{a.backend}" + (f"_{a.parity}" if a.parity else "") + ("_debug" if a.limit else "")
+    save(name, {"benchmark": "URFD cam0 RGB fall detection", "backend": a.backend, "conf": a.conf,
+                "parity_split": a.parity, **res})
     print(json.dumps({k: v for k, v in res.items() if k != "alarms"}, indent=1))
     for n, m in res["alarms"].items():
         print(n, "sens", m["sensitivity"]["k"], "/", m["sensitivity"]["n"],

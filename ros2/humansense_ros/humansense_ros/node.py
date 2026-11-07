@@ -116,10 +116,16 @@ class HumanSenseNode(Node):
         self._pipe.warmup()          # load every model now, not on the first camera frame
         self._warned_encoding = False
 
-        # Depth 1 + best effort: if inference is slower than the camera, the middleware drops the
-        # backlog and we always process the newest frame (the same policy as CameraSource).
+        # Depth 1 + reliable: if inference is slower than the camera, a newer sample supersedes the
+        # unacked old one locally (same "always process the newest frame" policy as CameraSource),
+        # but delivery of whatever IS sent is retried instead of silently lost to one dropped packet.
+        # Best-effort was tried first and measurably lost full frames to packet loss between
+        # separate processes/containers well below the inference-bound rate it was meant to shed
+        # (see scripts/ros2_e2e.sh and the ROS results in the README) -- unlike small messages,
+        # an uncompressed image is many UDP fragments, and losing any one of them drops the whole
+        # frame under best-effort.
         qos = QoSProfile(history=QoSHistoryPolicy.KEEP_LAST, depth=1,
-                         reliability=QoSReliabilityPolicy.BEST_EFFORT)
+                         reliability=QoSReliabilityPolicy.RELIABLE)
         self._pub_state = self.create_publisher(HumanSenseState, "~/state", 10)
         self._pub_risk = self.create_publisher(Risk, "~/risk", 10)
         self._pub_det = self.create_publisher(Detection2DArray, "~/detections", 10)

@@ -30,13 +30,39 @@ def test_standing_person_is_normal_at_any_distance(scale, bbox):
     assert names(upright(scale), bbox) == []
 
 
+LYING = landmarks(L_SHOULDER=(200, 300, 1, 0), R_SHOULDER=(200, 340, 1, 0),
+                  L_HIP=(320, 300, 1, 0), R_HIP=(320, 340, 1, 0),
+                  L_KNEE=(440, 300, 1, 0), R_KNEE=(440, 340, 1, 0))
+LYING_BBOX = (180, 280, 480, 360)
+
+
 def test_lying_person_is_a_fall_and_not_seated():
-    lying = landmarks(L_SHOULDER=(200, 300, 1, 0), R_SHOULDER=(200, 340, 1, 0),
-                      L_HIP=(320, 300, 1, 0), R_HIP=(320, 340, 1, 0),
-                      L_KNEE=(440, 300, 1, 0), R_KNEE=(440, 340, 1, 0))
-    got = names(lying, (180, 280, 480, 360))
+    S.reset_state()
+    # First-ever observation of this pid (no prior tilt to compare against): defaults to
+    # confirming the fall rather than the weaker cue.
+    got = names(LYING, LYING_BBOX)
     assert any(c.startswith("FALL detected") for c in got)
     assert "Seated posture" not in got
+
+
+def test_fall_with_a_tracked_person_needs_a_recent_tilt_rotation():
+    S.reset_state()
+    pid = 1
+    S._person_cues(upright(), (250, 80, 350, 420), pid=pid)   # frame 1: upright baseline
+    got = [c[0] for c in S._person_cues(LYING, LYING_BBOX, pid=pid)]   # frame 2: collapses
+    assert any(c.startswith("FALL detected") for c in got)
+
+
+def test_already_lying_with_no_rotation_is_only_a_fall_risk():
+    S.reset_state()
+    pid = 2
+    got = []
+    for _ in range(S.FALL_COLLAPSE_WINDOW + 2):
+        got = [c[0] for c in S._person_cues(LYING, LYING_BBOX, pid=pid)]
+    # Been horizontal for a while now with no further rotation in that window: a static rest
+    # posture (e.g. a bed/couch), not a fall event.
+    assert any(c.startswith("Fall risk") for c in got)
+    assert not any(c.startswith("FALL detected") for c in got)
 
 
 def test_seated_person():

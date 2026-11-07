@@ -5,7 +5,7 @@ import time
 import rclpy
 from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import Image
 
 from humansense.sources import open_source
@@ -31,7 +31,10 @@ class VideoPublisher(Node):
         self._src = open_source(src, loop=bool(self.get_parameter("loop").value), fps=self._fps)
         self._it = iter(self._src)
         self._n = 0
-        self._pub = self.create_publisher(Image, "image", qos_profile_sensor_data)
+        # Matches humansense_node's subscription QoS (see node.py): depth 1 + reliable.
+        qos = QoSProfile(history=QoSHistoryPolicy.KEEP_LAST, depth=1,
+                         reliability=QoSReliabilityPolicy.RELIABLE)
+        self._pub = self.create_publisher(Image, "image", qos)
         self._t0 = time.monotonic() + float(self.get_parameter("start_delay").value)
         self.create_timer(1.0 / self._fps, self._tick)
 
