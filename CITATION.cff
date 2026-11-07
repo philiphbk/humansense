@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use HumanSense, please cite it as below."
+title: "HumanSense: non-verbal human cue sensing for robots in hospitals"
+version: 2.0.0
+license: Apache-2.0
+type: software
+authors:
+  - family-names: "Fajorin"
+    given-names: "Damilola"
+repository-code: "https://github.com/philiphbk/humansense"
+keywords: [robotics, ROS 2, human-robot interaction, fall detection, healthcare]

@@ -1,0 +1,235 @@
+{
+  "generated": "2026-11-07 07:29:21",
+  "environment": {
+    "python": "3.10.0",
+    "platform": "macOS-27.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "numpy": "2.2.6",
+    "opencv": "4.13.0",
+    "humansense": "2.0.0",
+    "cpu": "Apple M4 Pro",
+    "mediapipe": "0.10.33",
+    "ultralytics": "8.4.41",
+    "onnxruntime": "1.23.2"
+  },
+  "benchmark": "URFD cam0 RGB fall detection",
+  "backend": "mediapipe",
+  "conf": 0.4,
+  "n_sequences": {
+    "fall": 30,
+    "adl_lying": 16,
+    "adl_plain": 24
+  },
+  "n_frames": 11936,
+  "alarms": {
+    "fall_cue": {
+      "sensitivity": {
+        "k": 24,
+        "n": 30,
+        "value": 0.8,
+        "ci95": [
+          0.6269395261897256,
+          0.9049502189759876
+        ]
+      },
+      "false_alarm_adl_plain": {
+        "k": 5,
+        "n": 24,
+        "specificity": 0.7916666666666666,
+        "ci95_spec": [
+          0.5952915551476452,
+          0.9075531089521192
+        ]
+      },
+      "false_alarm_adl_lying": {
+        "k": 10,
+        "n": 16,
+        "specificity": 0.375,
+        "ci95_spec": [
+          0.18480982554752806,
+          0.613593529020652
+        ]
+      },
+      "delay_after_lying_onset_s": {
+        "median": -0.4666666666666667,
+        "n": 24
+      },
+      "frame_level_vs_lying_label": {
+        "precision": 0.6134453781512605,
+        "recall": 0.2153392330383481,
+        "f1": 0.31877729257641924,
+        "tp": 511,
+        "fp": 322,
+        "fn": 1862,
+        "tn": 9241
+      },
+      "missed_falls": [
+        "fall-17",
+        "fall-21",
+        "fall-23",
+        "fall-25",
+        "fall-27",
+        "fall-29"
+      ],
+      "false_alarm_sequences": [
+        "adl-04",
+        "adl-05",
+        "adl-06",
+        "adl-17",
+        "adl-19",
+        "adl-10",
+        "adl-11",
+        "adl-30",
+        "adl-31",
+        "adl-32",
+        "adl-33",
+        "adl-34",
+        "adl-35",
+        "adl-36",
+        "adl-40"
+      ]
+    },
+    "fall_or_risk_cue": {
+      "sensitivity": {
+        "k": 24,
+        "n": 30,
+        "value": 0.8,
+        "ci95": [
+          0.6269395261897256,
+          0.9049502189759876
+        ]
+      },
+      "false_alarm_adl_plain": {
+        "k": 9,
+        "n": 24,
+        "specificity": 0.625,
+        "ci95_spec": [
+          0.42709619037907065,
+          0.7884086656636855
+        ]
+      },
+      "false_alarm_adl_lying": {
+        "k": 10,
+        "n": 16,
+        "specificity": 0.375,
+        "ci95_spec": [
+          0.18480982554752806,
+          0.613593529020652
+        ]
+      },
+      "delay_after_lying_onset_s": {
+        "median": -0.6333333333333333,
+        "n": 24
+      },
+      "frame_level_vs_lying_label": {
+        "precision": 0.4897260273972603,
+        "recall": 0.24104509060261273,
+        "f1": 0.32307257836769276,
+        "tp": 572,
+        "fp": 596,
+        "fn": 1801,
+        "tn": 8967
+      },
+      "missed_falls": [
+        "fall-17",
+        "fall-21",
+        "fall-23",
+        "fall-25",
+        "fall-27",
+        "fall-29"
+      ],
+      "false_alarm_sequences": [
+        "adl-01",
+        "adl-04",
+        "adl-05",
+        "adl-06",
+        "adl-09",
+        "adl-12",
+        "adl-15",
+        "adl-17",
+        "adl-19",
+        "adl-10",
+        "adl-11",
+        "adl-30",
+        "adl-31",
+        "adl-32",
+        "adl-33",
+        "adl-34",
+        "adl-35",
+        "adl-36",
+        "adl-40"
+      ]
+    },
+    "risk_critical": {
+      "sensitivity": {
+        "k": 24,
+        "n": 30,
+        "value": 0.8,
+        "ci95": [
+          0.6269395261897256,
+          0.9049502189759876
+        ]
+      },
+      "false_alarm_adl_plain": {
+        "k": 5,
+        "n": 24,
+        "specificity": 0.7916666666666666,
+        "ci95_spec": [
+          0.5952915551476452,
+          0.9075531089521192
+        ]
+      },
+      "false_alarm_adl_lying": {
+        "k": 10,
+        "n": 16,
+        "specificity": 0.375,
+        "ci95_spec": [
+          0.18480982554752806,
+          0.613593529020652
+        ]
+      },
+      "delay_after_lying_onset_s": {
+        "median": -0.4666666666666667,
+        "n": 24
+      },
+      "frame_level_vs_lying_label": {
+        "precision": 0.6134453781512605,
+        "recall": 0.2153392330383481,
+        "f1": 0.31877729257641924,
+        "tp": 511,
+        "fp": 322,
+        "fn": 1862,
+        "tn": 9241
+      },
+      "missed_falls": [
+        "fall-17",
+        "fall-21",
+        "fall-23",
+        "fall-25",
+        "fall-27",
+        "fall-29"
+      ],
+      "false_alarm_sequences": [
+        "adl-04",
+        "adl-05",
+        "adl-06",
+        "adl-17",
+        "adl-19",
+        "adl-10",
+        "adl-11",
+        "adl-30",
+        "adl-31",
+        "adl-32",
+        "adl-33",
+        "adl-34",
+        "adl-35",
+        "adl-36",
+        "adl-40"
+      ]
+    }
+  },
+  "compute_ms_per_frame": {
+    "median": 30.52252099951147,
+    "p95": 74.95735424890881
+  }
+}

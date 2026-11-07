@@ -1,0 +1,12 @@
+# Example parameters:  ros2 run humansense_ros humansense_node --ros-args --params-file humansense.yaml
+humansense:
+  ros__parameters:
+    backend: auto              # auto | mediapipe (Apache-2.0) | yolo (needs humansense[yolo], AGPL-3.0)
+    modules: [crowd, proximity, pose]   # add `emotion` to opt in (see docs/ETHICS.md)
+    conf: 0.4
+    max_width: 720             # 0 = native resolution
+    robot_x: 0.5               # where the robot is in the image (camera mounted on the robot: bottom centre)
+    robot_y: 1.0
+    calibration_path: ""       # optional floor homography / no-fall zones, see docs/CALIBRATION.md
+    publish_annotated: false   # overlay video on ~/annotated (costs CPU; enable for debugging/rviz)
+    models_dir: ""

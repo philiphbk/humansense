@@ -1,0 +1,32 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: { python: ["3.10", "3.11", "3.12"] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "${{ matrix.python }}" }
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests
+      - run: pytest -q
+
+  ros2:
+    runs-on: ubuntu-24.04
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the ROS 2 Jazzy image (also builds both ROS packages)
+        run: docker build -f docker/ros2.Dockerfile -t humansense-ros .
+      - name: Interface + converter unit tests
+        run: |
+          docker run --rm -v "$PWD/ros2/humansense_ros/test:/t:ro" humansense-ros \
+            bash -c "cd /tmp && python3 -m pytest -q /t/test_convert.py -p no:cacheprovider"
+      - name: End-to-end (video -> node -> /humansense/state)
+        run: |
+          mkdir -p /tmp/out
+          scripts/ros2_e2e.sh assets/demo.mp4 /tmp/out/e2e.json "" mediapipe 15

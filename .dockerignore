@@ -1,0 +1,13 @@
+.venv*
+.git
+.idea
+.sixth
+**/__pycache__
+.pytest_cache
+assets
+yolov8n.pt
+*.pt
+events.db
+paper
+benchmarks/results
+benchmarks/cache

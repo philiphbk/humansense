@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "humansense"
+version = "2.0.0"
+description = "Non-verbal human cue sensing (crowding, proximity, falls, gestures) for robots in hospitals, with a ROS 2 interface."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+authors = [{ name = "Damilola Fajorin" }]
+
+[project.urls]
+Repository = "https://github.com/philiphbk/humansense"
+keywords = ["robotics", "ros2", "computer-vision", "human-robot-interaction", "healthcare", "fall-detection"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.10",
+  "opencv-python-headless>=4.9",
+  "mediapipe>=0.10.30",
+  "onnxruntime>=1.17",
+  "hsemotion-onnx>=0.3.1",
+  "certifi",
+]
+
+[project.optional-dependencies]
+yolo  = ["ultralytics>=8.3"]            # AGPL-3.0 – optional, see docs/LICENSING.md
+app   = ["streamlit>=1.40", "pandas", "Pillow"]
+bench = ["pycocotools", "pandas", "tqdm", "datasets", "ultralytics>=8.3"]
+dev   = ["pytest>=8,<9", "ruff"]
+
+[project.scripts]
+humansense = "humansense.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["models: needs downloaded model files / network", "ros: needs a ROS 2 install"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
