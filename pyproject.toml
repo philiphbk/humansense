@@ -10,9 +10,6 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"
 authors = [{ name = "Damilola Fajorin" }]
-
-[project.urls]
-Repository = "https://github.com/philiphbk/humansense"
 keywords = ["robotics", "ros2", "computer-vision", "human-robot-interaction", "healthcare", "fall-detection"]
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -29,6 +26,9 @@ dependencies = [
   "hsemotion-onnx>=0.3.1",
   "certifi",
 ]
+
+[project.urls]
+Repository = "https://github.com/philiphbk/humansense"
 
 [project.optional-dependencies]
 yolo  = ["ultralytics>=8.3"]            # AGPL-3.0 – optional, see docs/LICENSING.md
