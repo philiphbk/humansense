@@ -110,7 +110,20 @@ Build and run in Docker (ROS 2 Jazzy):
 docker build -f docker/ros2.Dockerfile -t humansense-ros .      # add --build-arg WITH_YOLO=1 for the yolo backend
 docker run --rm -it humansense-ros
 scripts/ros2_e2e.sh <video_or_image_dir> result.json            # end-to-end smoke test
+# + /annotated, and a robot position (normalised x/y in the image):
+ROBOT_X=0.5 ROBOT_Y=0.8 scripts/ros2_e2e.sh <video_or_image_dir> result.json "" mediapipe 30 true
 ```
+
+[`e2e_check.py`](ros2/humansense_ros/test/e2e_check.py) checks `~/state` (latency/throughput/risk)
+and `~/detections` on every run, and `~/annotated` when `--expect-annotated` (the `scripts/ros2_e2e.sh`
+`annotated` arg above) is set. Because a generic demo clip never gets close enough to trigger a
+violation, the risk/cue/violation *content* of those messages is instead covered without a camera
+feed at all: [`test_node_messages.py`](ros2/humansense_ros/test/test_node_messages.py) unit-tests the
+message-building code directly, and
+[`test_risk_integration.py`](ros2/humansense_ros/test/test_risk_integration.py) runs the real node
+over real ROS topics with a stubbed person-detector (same trick as `tests/test_pipeline.py`) to
+force a real personal-space and robot-proximity violation and check the resulting `Risk`/`Violation`
+messages.
 
 ---
 

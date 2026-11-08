@@ -22,11 +22,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build the ROS 2 Jazzy image (also builds both ROS packages)
         run: docker build -f docker/ros2.Dockerfile -t humansense-ros .
-      - name: Interface + converter unit tests
+      - name: Interface, message-conversion, and risk/violation integration tests
         run: |
           docker run --rm -v "$PWD/ros2/humansense_ros/test:/t:ro" humansense-ros \
-            bash -c "cd /tmp && python3 -m pytest -q /t/test_convert.py -p no:cacheprovider"
-      - name: End-to-end (video -> node -> /humansense/state)
+            bash -c "cd /tmp && python3 -m pytest -q /t/test_convert.py /t/test_node_messages.py \
+              /t/test_risk_integration.py -p no:cacheprovider"
+      - name: End-to-end (video -> node -> /humansense/state, /detections)
         run: |
           mkdir -p /tmp/out
           scripts/ros2_e2e.sh assets/demo.mp4 /tmp/out/e2e.json "" mediapipe 15
+      - name: End-to-end with annotated image + robot position
+        run: |
+          ROBOT_X=0.5 ROBOT_Y=0.8 \
+            scripts/ros2_e2e.sh assets/demo.mp4 /tmp/out/e2e_annotated.json "" mediapipe 15 true
