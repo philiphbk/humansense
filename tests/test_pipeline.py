@@ -50,7 +50,7 @@ def test_boxes_are_reported_in_original_pixels_when_downscaled(stub):
 
 
 def test_draw_false_skips_rendering_and_draw_true_produces_an_image(stub):
-    cfg = dict(modules=("crowd", "proximity"), max_width=None)
+    cfg = {"modules": ("crowd", "proximity"), "max_width": None}
     assert Pipeline(PipelineConfig(**cfg)).process(FRAME).annotated is None
     out = Pipeline(PipelineConfig(draw=True, **cfg)).process(FRAME).annotated
     assert out is not None and out.shape[1] == 640

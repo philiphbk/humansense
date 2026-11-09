@@ -13,11 +13,11 @@ Emotions → hospital non-verbal cues:
 """
 
 import cv2
-import numpy as np
 import mediapipe as mp
+import numpy as np
+from hsemotion_onnx.facial_emotions import HSEmotionRecognizer
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
-from hsemotion_onnx.facial_emotions import HSEmotionRecognizer
 
 from ..models import ensure_model
 
@@ -111,7 +111,7 @@ def detect_emotions(frame: np.ndarray, draw: bool = True):
         try:
             emotion, scores = emotion_rec.predict_emotions(face_crop, logits=False)
             confidence = float(np.max(scores))
-        except Exception:
+        except Exception:  # noqa: BLE001 - one bad crop must never take emotion sensing down
             emotion    = "Neutral"
             confidence = 0.5
 

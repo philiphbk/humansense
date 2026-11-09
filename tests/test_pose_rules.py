@@ -1,7 +1,7 @@
 import pytest
 
 pytest.importorskip("mediapipe")
-from humansense.modules import pose_detector as S  # noqa: E402
+from humansense.modules import pose_detector as S
 
 
 def landmarks(**kw):

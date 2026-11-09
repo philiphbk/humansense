@@ -3,7 +3,7 @@ Lightweight temporal helpers: a greedy IoU person tracker and an alert debouncer
 Both are stepped once per *processed* frame, so they stay consistent with frame skipping.
 """
 
-from typing import Dict, Hashable, Iterable, List, Set
+from collections.abc import Hashable, Iterable
 
 import numpy as np
 from scipy.optimize import linear_sum_assignment
@@ -33,7 +33,7 @@ class PersonTracker:
     def __init__(self, iou_threshold: float = 0.2, max_missed: int = 8):
         self.iou_threshold = iou_threshold
         self.max_missed = max_missed
-        self._tracks: Dict[int, dict] = {}
+        self._tracks: dict[int, dict] = {}
         self._next_id = 1
 
     def reset(self):
@@ -53,7 +53,7 @@ class PersonTracker:
         ca, cb = ((a[0] + a[2]) / 2, (a[1] + a[3]) / 2), ((b[0] + b[2]) / 2, (b[1] + b[3]) / 2)
         return ((ca[0] - cb[0]) ** 2 + (ca[1] - cb[1]) ** 2) ** 0.5 / h
 
-    def update(self, detections: List[dict]) -> List[dict]:
+    def update(self, detections: list[dict]) -> list[dict]:
         """Adds 'id', 'speed' and 'still_frames' to each detection (in place)."""
         tids = list(self._tracks)
         used_det, used_trk = set(), set()
@@ -113,16 +113,16 @@ class Debouncer:
     def __init__(self, on_frames: int = 2, off_frames: int = 3):
         self.on_frames = on_frames
         self.off_frames = off_frames
-        self._hits: Dict[Hashable, int] = {}
-        self._misses: Dict[Hashable, int] = {}
-        self._active: Set[Hashable] = set()
+        self._hits: dict[Hashable, int] = {}
+        self._misses: dict[Hashable, int] = {}
+        self._active: set[Hashable] = set()
 
     def reset(self):
         self._hits.clear()
         self._misses.clear()
         self._active.clear()
 
-    def update(self, keys: Iterable[Hashable]) -> Set[Hashable]:
+    def update(self, keys: Iterable[Hashable]) -> set[Hashable]:
         keys = set(keys)
         for k in keys:
             self._hits[k] = self._hits.get(k, 0) + 1

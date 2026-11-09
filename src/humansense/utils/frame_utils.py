@@ -2,10 +2,11 @@
 Shared frame utilities — blending, compositing, and event logging.
 """
 
+from collections import deque
+from datetime import datetime
+
 import cv2
 import numpy as np
-from datetime import datetime
-from collections import deque
 
 from .event_store import save_event
 
@@ -77,7 +78,7 @@ def _soft_overlay(target: np.ndarray, annotated: np.ndarray, base: np.ndarray) -
 
 def draw_status_bar(frame: np.ndarray, results: dict) -> np.ndarray:
     """Draw a dark status bar at the bottom of the frame with key metrics."""
-    h, w = frame.shape[:2]
+    _h, w = frame.shape[:2]
     bar_h = 36
     bar = np.zeros((bar_h, w, 3), dtype=np.uint8)
     bar[:] = (25, 25, 25)

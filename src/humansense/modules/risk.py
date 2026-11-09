@@ -4,14 +4,13 @@ A single weak cue stays low; independent cues that agree (a fall, with nobody mo
 near the robot) add up. Emotion is deliberately weighted low: masks make it unreliable.
 """
 
-from typing import Dict
 
 # Processed frames a person must stay still after a fall cue to count as "no movement",
 # and processed frames of lingering inside the robot's bubble to count as "dwelling".
 STILL_FRAMES_AFTER_FALL = 6
 DWELL_FRAMES_NEAR_ROBOT = 8
 
-_near_robot_frames: Dict[int, int] = {}
+_near_robot_frames: dict[int, int] = {}
 
 
 def reset_state():

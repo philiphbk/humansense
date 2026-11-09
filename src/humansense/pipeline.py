@@ -15,14 +15,14 @@ per process (use one ROS node/process per camera for multi-camera setups).
 from __future__ import annotations
 
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Optional, Sequence, Tuple
 
 import cv2
 import numpy as np
 
 from . import detectors
-from .result import (CUE_SEVERITY, Cue, Face, FrameResult, Person, Risk, Violation, cue_kind)
+from .result import CUE_SEVERITY, Cue, Face, FrameResult, Person, Risk, Violation, cue_kind
 
 ALL_MODULES = ("crowd", "proximity", "pose", "emotion")
 
@@ -33,9 +33,9 @@ class PipelineConfig:
     backend: str = "auto"                   # "auto" | "yolo" | "mediapipe"
     backend_kwargs: dict = field(default_factory=dict)
     conf: float = 0.40                      # person-detection confidence threshold
-    max_width: Optional[int] = 720          # downscale wider frames first (None = native size)
-    robot_position: Optional[Tuple[float, float]] = None   # normalised (x, y) of the robot in view
-    calibration_path: Optional[str] = None  # floor-homography / no-fall-zone JSON (see utils.calibration)
+    max_width: int | None = 720          # downscale wider frames first (None = native size)
+    robot_position: tuple[float, float] | None = None   # normalised (x, y) of the robot in view
+    calibration_path: str | None = None  # floor-homography / no-fall-zone JSON (see utils.calibration)
     draw: bool = False                      # render overlays into result.annotated
     show_heatmap: bool = True
 
@@ -46,7 +46,7 @@ class PipelineConfig:
 
 
 class Pipeline:
-    def __init__(self, config: Optional[PipelineConfig] = None):
+    def __init__(self, config: PipelineConfig | None = None):
         # Imported here so that `import humansense` stays cheap and doesn't load every model stack
         from .modules import crowd_detector, pose_detector, proximity_detector, risk
         from .utils.calibration import load_calibration
@@ -85,7 +85,7 @@ class Pipeline:
     def detector_name(self) -> str:
         return detectors.get_detector().name
 
-    def process(self, frame_bgr: np.ndarray, timestamp: Optional[float] = None) -> FrameResult:
+    def process(self, frame_bgr: np.ndarray, timestamp: float | None = None) -> FrameResult:
         cfg, mods = self.cfg, set(self.cfg.modules)
         oh, ow = frame_bgr.shape[:2]
         scale = 1.0
@@ -105,7 +105,7 @@ class Pipeline:
             t0 = time.perf_counter()
             try:
                 return fn()
-            except Exception as e:  # one failing module must never take the robot's sensing down
+            except Exception as e:  # noqa: BLE001 - one failing module must never take the robot's sensing down
                 res.errors.append(f"{name}: {type(e).__name__}: {e}")
                 return None
             finally:
@@ -177,4 +177,4 @@ class Pipeline:
 def _unscale(bbox, scale):
     if scale == 1.0:
         return tuple(int(v) for v in bbox)
-    return tuple(int(round(v / scale)) for v in bbox)
+    return tuple(round(v / scale) for v in bbox)

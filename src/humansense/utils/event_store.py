@@ -21,7 +21,7 @@ def save_event(event_type: str, detail: str, path: str = DB_PATH) -> None:
     try:
         with _lock, _connect(path) as conn:
             conn.execute("INSERT INTO events (type, detail) VALUES (?, ?)", (event_type, detail))
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
 

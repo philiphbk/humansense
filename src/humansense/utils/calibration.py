@@ -14,7 +14,6 @@ Every key is optional; without a file the app falls back to the height-based heu
 
 import json
 import os
-from typing import Optional
 
 import cv2
 import numpy as np
@@ -45,11 +44,11 @@ class Calibration:
         return any(cv2.pointPolygonTest(z, pt, False) >= 0 for z in self.zones)
 
 
-def load_calibration(path: str = CALIBRATION_PATH) -> Optional[Calibration]:
+def load_calibration(path: str = CALIBRATION_PATH) -> Calibration | None:
     if not os.path.exists(path):
         return None
     try:
         with open(path) as f:
             return Calibration(json.load(f))
-    except Exception:
+    except Exception:  # noqa: BLE001 - a malformed calibration file should fall back, not crash
         return None

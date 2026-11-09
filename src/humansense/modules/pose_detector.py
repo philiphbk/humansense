@@ -12,8 +12,8 @@ import math
 from collections import deque
 
 import cv2
-import numpy as np
 import mediapipe as mp
+import numpy as np
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
 
@@ -289,9 +289,8 @@ def _person_cues(pts, bbox, pid=0):
                      lambda f, t=target: _highlight_point(f, t, (50, 200, 50), "Hand raised!")))
 
     # ── Protective / hunched posture (only meaningful when facing the camera) ───
-    if shoulders_ok and torso_len and frontal and upright:
-        if sh_width < torso_len * 0.4 and torso_len > 30:
-            cues.append(("Protective/hunched posture", lambda f: None))
+    if shoulders_ok and torso_len and frontal and upright and sh_width < torso_len * 0.4 and torso_len > 30:
+        cues.append(("Protective/hunched posture", lambda f: None))
 
     # ── Arms crossed (only meaningful when facing the camera) ───────────────────
     if (frontal and hips_ok and vis(_L_WRIST) > 0.5 and vis(_R_WRIST) > 0.5):

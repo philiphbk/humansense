@@ -16,15 +16,13 @@ Phase 4 additions:
 """
 
 import os
+import tempfile
+import time
+from collections import deque
 
-import streamlit as st
 import cv2
 import numpy as np
-from PIL import Image
-import time
-import tempfile
-from collections import deque
-from datetime import datetime
+import streamlit as st
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -181,7 +179,7 @@ st.markdown(f"""
 
 try:
     PIPE, log_event, get_event_log = load_pipeline(backend)
-except Exception as _e:
+except Exception as _e:  # noqa: BLE001 - surface any load failure to the UI instead of crashing
     st.error(f"**Model load failed:** {_e}")
     st.info("Run `humansense download-models` (needs internet once), then restart the app. "
             "If you picked the yolo backend: `pip install 'humansense[yolo]'`.")
@@ -273,8 +271,10 @@ def _maybe_toast(results):
 
     def _toast(key, msg, icon):
         if now - last.get(key, 0) > 4.0:
-            try: st.toast(msg, icon=icon)
-            except Exception: pass
+            try:
+                st.toast(msg, icon=icon)
+            except Exception:  # noqa: BLE001, S110 - a toast failing must never break rendering
+                pass
             last[key] = now
 
     crowd = results.get("crowd", {})
@@ -297,9 +297,9 @@ def _maybe_toast(results):
 def _build_settings():
     mods = [m for m, on in (("crowd", show_crowd), ("proximity", show_proximity),
                             ("pose", show_pose), ("emotion", show_emotions)) if on]
-    return dict(modules=mods or ["crowd"], robot_pos=robot_pos, conf=conf_thr,
-                frame_skip=frame_skip, max_width=max_width, blur_faces=blur_faces,
-                show_heatmap=show_heatmap)
+    return {"modules": mods or ["crowd"], "robot_pos": robot_pos, "conf": conf_thr,
+            "frame_skip": frame_skip, "max_width": max_width, "blur_faces": blur_faces,
+            "show_heatmap": show_heatmap}
 
 
 def _log_result(res):
@@ -331,6 +331,7 @@ def _log_result(res):
 
 def process_frame(frame, cfg, timestamp=None):
     from dataclasses import replace
+
     from humansense.utils.privacy import blur_heads
     PIPE.cfg = replace(PIPE.cfg, modules=tuple(cfg["modules"]), conf=cfg["conf"],
                        robot_position=cfg["robot_pos"], max_width=cfg["max_width"],
@@ -402,7 +403,7 @@ def run_webcam(device="0"):
     cfg = _build_settings()
     try:
         cam = CameraSource(device, width=1280, height=720)
-    except IOError as e:
+    except OSError as e:
         status_ph.error(str(e))
         _show_placeholder_metrics()
         return

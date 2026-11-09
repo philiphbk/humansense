@@ -15,11 +15,10 @@ integer pixel coordinates of the frame passed in.
 from __future__ import annotations
 
 import os
-from typing import Dict, List, Optional
 
 import numpy as np
 
-Detection = Dict[str, object]
+Detection = dict[str, object]
 
 BACKENDS = ("yolo", "mediapipe")
 
@@ -27,14 +26,14 @@ BACKENDS = ("yolo", "mediapipe")
 class PersonDetector:
     name = "base"
 
-    def detect(self, frame_bgr: np.ndarray, conf: float = 0.4) -> List[Detection]:  # pragma: no cover
+    def detect(self, frame_bgr: np.ndarray, conf: float = 0.4) -> list[Detection]:  # pragma: no cover
         raise NotImplementedError
 
 
 class YoloPersonDetector(PersonDetector):
     name = "yolo"
 
-    def __init__(self, weights: str = "yolov8n.pt", imgsz: Optional[int] = None):
+    def __init__(self, weights: str = "yolov8n.pt", imgsz: int | None = None):
         try:
             from ultralytics import YOLO
         except ImportError as e:  # pragma: no cover - depends on the environment
@@ -60,7 +59,7 @@ class MediaPipePersonDetector(PersonDetector):
     name = "mediapipe"
 
     def __init__(self, model: str = "efficientdet_lite0.tflite", min_score: float = 0.05):
-        import mediapipe as mp  # noqa: F401  (imported here so the name `mp` is bound below)
+        import mediapipe as mp
         from mediapipe.tasks import python as mp_python
         from mediapipe.tasks.python import vision as mp_vision
 
@@ -94,7 +93,7 @@ class MediaPipePersonDetector(PersonDetector):
         return out
 
 
-_current: Optional[PersonDetector] = None
+_current: PersonDetector | None = None
 _preferred = "auto"
 
 

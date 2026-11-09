@@ -4,12 +4,11 @@ Detects when people are too close to each other (or to a simulated robot positio
 Uses person-height-normalised foot-point distances since we don't have depth cameras.
 """
 
+
 import cv2
 import numpy as np
-from typing import List, Dict, Tuple
 
 from ..utils.tracking import Debouncer
-
 
 # Personal space as a multiple of the (mean) person's on-screen height. Scaling by
 # body height makes the threshold follow perspective: far-away people are small, so
@@ -34,7 +33,7 @@ def reset_state():
 
 def _foot(det):
     """Ground-contact proxy: bottom-centre of the box (better than the box centre)."""
-    x1, y1, x2, y2 = det["bbox"]
+    x1, _y1, x2, y2 = det["bbox"]
     return ((x1 + x2) // 2, y2)
 
 
@@ -42,7 +41,7 @@ def _height(det):
     return max(det["bbox"][3] - det["bbox"][1], 1)
 
 
-def check_proximity(frame: np.ndarray, detections: List[Dict], robot_position: Tuple = None,
+def check_proximity(frame: np.ndarray, detections: list[dict], robot_position: tuple | None = None,
                     calibration=None, draw: bool = True):
     """
     Given a list of person detections (with optional tracker 'id'), check:

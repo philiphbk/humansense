@@ -12,13 +12,13 @@ import os
 import ssl
 import sys
 import urllib.request
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, Iterable, Optional
 
 _GCS = "https://storage.googleapis.com/mediapipe-models"
 
 # name -> (url, minimum plausible size in bytes)
-MODEL_FILES: Dict[str, tuple] = {
+MODEL_FILES: dict[str, tuple] = {
     "pose_landmarker_lite.task": (
         f"{_GCS}/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task",
         1_000_000),
@@ -35,8 +35,9 @@ MODEL_FILES: Dict[str, tuple] = {
     # The hsemotion-onnx package looks for it in ~/.hsemotion, and its own downloader is broken
     # (it never imports urllib.request) so we fetch it ourselves.
     "enet_b0_8_best_vgaf.onnx": (
-        "https://github.com/HSE-asavchenko/face-emotion-recognition/raw/main/models/"
-        "affectnet_emotions/onnx/enet_b0_8_best_vgaf.onnx", 5_000_000),
+        ("https://github.com/HSE-asavchenko/face-emotion-recognition/raw/main/models/"
+         "affectnet_emotions/onnx/enet_b0_8_best_vgaf.onnx"),
+        5_000_000),
 }
 
 # Models that live somewhere other than models_dir() because a third-party package expects them there
@@ -95,7 +96,7 @@ def ensure_model(name: str, *, quiet: bool = False) -> str:
     return str(dest)
 
 
-def download_all(names: Optional[Iterable[str]] = None, *, quiet: bool = False) -> Dict[str, str]:
+def download_all(names: Iterable[str] | None = None, *, quiet: bool = False) -> dict[str, str]:
     """Download the given models (default: everything the default pipeline needs)."""
     names = list(names) if names else [
         "pose_landmarker_lite.task", "blaze_face_short_range.tflite", "efficientdet_lite0.tflite",

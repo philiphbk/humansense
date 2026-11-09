@@ -40,7 +40,10 @@ def _cmd_run(args):
         max_width=args.max_width or None, draw=bool(args.display or args.save_video),
         robot_position=tuple(args.robot) if args.robot else None, calibration_path=args.calibration)
     pipe = Pipeline(cfg)
-    out = open(args.jsonl, "w") if args.jsonl and args.jsonl != "-" else (sys.stdout if args.jsonl else None)
+    out = (
+        open(args.jsonl, "w")  # noqa: SIM115 - lives for the whole run, closed explicitly below
+        if args.jsonl and args.jsonl != "-" else (sys.stdout if args.jsonl else None)
+    )
     writer = None
     totals, n = [], 0
     lat = []

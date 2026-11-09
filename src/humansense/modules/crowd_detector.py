@@ -3,9 +3,10 @@ Stage 2 — Crowd Detection Module
 Detects people (pluggable backend, see humansense.detectors), estimate crowd density, and generate a heatmap overlay.
 """
 
+from collections import deque
+
 import cv2
 import numpy as np
-from collections import deque
 
 from ..detectors import get_detector
 from ..utils.tracking import PersonTracker

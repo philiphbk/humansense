@@ -14,8 +14,8 @@ import glob
 import os
 import threading
 import time
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
-from typing import Callable, Iterator, Optional, Union
 
 import cv2
 import numpy as np
@@ -53,7 +53,7 @@ class VideoFileSource(FrameSource):
         self.path, self.loop, self.realtime = path, loop, realtime
         self._cap = cv2.VideoCapture(path)
         if not self._cap.isOpened():
-            raise IOError(f"cannot open video: {path}")
+            raise OSError(f"cannot open video: {path}")
         self.fps = self._cap.get(cv2.CAP_PROP_FPS) or 30.0
         self.total = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 0
 
@@ -85,7 +85,7 @@ class ImageSequenceSource(FrameSource):
         self.files = sorted(f for f in glob.glob(os.path.join(directory, "*"))
                             if f.lower().endswith(IMAGE_EXTS))
         if not self.files:
-            raise IOError(f"no images in {directory}")
+            raise OSError(f"no images in {directory}")
         self.fps, self.total = fps, len(self.files)
 
     def __iter__(self):
@@ -103,14 +103,14 @@ class CameraSource(FrameSource):
     timeout or once the camera has been lost for good. Iterating yields frames until ``close()``.
     """
 
-    def __init__(self, device: Union[int, str] = 0, width: Optional[int] = None,
-                 height: Optional[int] = None, fps: Optional[float] = None,
+    def __init__(self, device: int | str = 0, width: int | None = None,
+                 height: int | None = None, fps: float | None = None,
                  reconnect: bool = True, reconnect_delay: float = 1.0,
-                 capture_factory: Optional[Callable[[], "cv2.VideoCapture"]] = None):
+                 capture_factory: Callable[[], cv2.VideoCapture] | None = None):
         self.device, self.reconnect, self.reconnect_delay = device, reconnect, reconnect_delay
         self._factory = capture_factory or (lambda: self._open_device(device, width, height, fps))
         self._cond = threading.Condition()
-        self._latest: Optional[Frame] = None
+        self._latest: Frame | None = None
         self._stop = False
         self._lost = False
         self.captured = 0       # frames grabbed from the device
@@ -119,7 +119,7 @@ class CameraSource(FrameSource):
         self._next_index = 0    # first frame index the consumer has not yet received
         self._cap = self._factory()
         if not self._cap.isOpened():
-            raise IOError(
+            raise OSError(
                 f"cannot open camera {device!r}. On macOS grant the terminal/IDE camera access "
                 "(System Settings -> Privacy & Security -> Camera); on Linux check /dev/video* "
                 "permissions (video group) and that no other process holds the device.")
@@ -173,7 +173,7 @@ class CameraSource(FrameSource):
         return False
 
     # -- consumer API
-    def read(self, timeout: float = 2.0) -> Optional[Frame]:
+    def read(self, timeout: float = 2.0) -> Frame | None:
         """Newest undelivered frame; None on timeout or if the camera is gone."""
         deadline = time.monotonic() + timeout
         with self._cond:
@@ -212,7 +212,7 @@ class CameraSource(FrameSource):
         self._cap.release()
 
 
-def open_source(spec: Union[str, int], **kwargs) -> FrameSource:
+def open_source(spec: str | int, **kwargs) -> FrameSource:
     """
     Open a source from a string: ``0`` / ``/dev/video0`` / ``rtsp://...`` -> camera,
     a directory -> image sequence, anything else -> video file.
